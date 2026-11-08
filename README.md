@@ -1,95 +1,89 @@
-<div align="center">
+# Google Antigravity 2.0 Türkçe Yerelleştirme ve Güncelleme İzleme Modülü
 
-# 🌐 Google Antigravity 2.0 Türkçe Yama & Otomatik Güncelleme Eklentisi
+Bu depo, **Google Antigravity 2.0** masaüstü çalışma ortamı için geliştirilmiş yerelleştirme katmanını, çalışma zamanı dinamik DOM çeviri motorunu ve otomatik sürüm güncellemelerine karşı kalıcılık sağlayan izleme servisini içerir.
 
-**Google Antigravity masaüstü yapay zeka arayüzü için kesintisiz, dinamik ve güncelleme-dirençli Türkçe yerelleştirme katmanı.**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078D6.svg?logo=windows)](https://microsoft.com)
-[![Antigravity](https://img.shields.io/badge/Google%20Antigravity-v2.29%2B-4285F4.svg?logo=google)](https://deepmind.google)
-[![Status](https://img.shields.io/badge/Status-Active%20%26%20Tested-success.svg)](#)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-
-[Kurulum](#-hızlı-kurulum) • [Özellikler](#-öne-çıkan-özellikler) • [Mimari](#-mimari-akış-şeması) • [Ekran Görüntüleri](#-ekran-görüntüleri) • [Geri Alma](#-kaldırma-uninstallation) • [Katkıda Bulunma](CONTRIBUTING.md)
-
-</div>
+[![Lisans: MIT](https://img.shields.io/badge/Lisans-MIT-blue.svg)](LICENSE)
+[![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078D6.svg)](https://microsoft.com)
+[![Hedef Sürüm](https://img.shields.io/badge/Antigravity-v2.29%2B-4285F4.svg)](https://deepmind.google)
+[![Test Durumu](https://img.shields.io/badge/Do%C4%9Frulama-12%2F12%20Ge%C3%A7ti-success.svg)](#doğrulama-ve-test-metodolojisi)
 
 ---
 
-## 📌 Neden Bu Proje?
+## 1. Amaç ve Kapsam
 
-**Google Antigravity**, DeepMind ekibi tarafından geliştirilen yeni nesil otonom ajan ve kodlama ortamıdır. Ancak yerel olarak Türkçe dil desteği sunmamaktadır. 
+Google Antigravity, Electron tabanlı bir masaüstü yapay zeka arayüzüdür. Uygulama arayüzü varsayılan olarak İngilizce dilinde derlenmekte olup yerel dil desteği içermemektedir. Ayrıca Electron çalışma zamanı mimarisi gereği, uygulama güncellendiğinde paket arşivi (`app.asar`) bütünüyle yeniden yazılmakta ve yerel dosya değişiklikleri sıfırlanmaktadır.
 
-Bu proje;
-1. Antigravity 2.0 arayüzünü (Ayarlar, Projeler, İzinler, Modeller, Sohbet Akışı, Otomasyonlar, Menüler) eksiksiz Türkçeleştirir.
-2. **Addon Modu (Otomatik Güncelleme Koruyucusu):** Antigravity her güncellendiğinde Electron `app.asar` arşivi sıfırlanır. Bu repo, Windows arka planında dosya değişimlerini izleyerek güncellemeyi saniyeler içinde sessizce yeniden mühürler; çevirileriniz asla kaybolmaz.
-3. **Sıfır Performans Kaybı:** Kod blokları (`monaco`, `prism`, `code`) filtrelenir; sadece kullanıcı arayüzü reaktif `MutationObserver` ile çevrilir.
-
----
-
-## ✨ Öne Çıkan Özellikler
-
-- 🚀 **Tek Tıkla Kurulum:** `Install.cmd` ile yönetici iznine gerek duymadan anında devreye girer.
-- 🔄 **Canlı Sıcak Enjeksiyon (Hot-Apply):** Uygulama açıkken dahi yeniden başlatma gerektirmeden CDP üzerinden anında Türkçe'ye dönüşür.
-- 🛡️ **Güncelleme Direnci:** Antigravity arka planda kendini güncellediğinde, yerleşik izleyici ASAR mühür kontrolü yapar ve yamayı tekrar uygular.
-- 📦 **700+ Terim & Dinamik Regex:** Basit statik metinlerin ötesinde sayılar, süreler (`5s limit`, `%93 kaldı`), çoğul kalıplar dinamik işlenir.
-- 🔒 **Güvenli ve Geri Alınabilir:** Orijinal `app.asar` dosyası `app.asar.bak.original` adıyla korunur; `Uninstall.cmd` ile saniyeler içinde fabrika ayarlarına dönülür.
+Bu çalışmanın hedefleri:
+1. Uygulama arayüz metinlerinin, özniteliklerinin (`placeholder`, `title`, `aria-label`) ve dinamik sayısal/zamansal sayaçlarının performans kaybı yaratmaksızın Türkçe diline dönüştürülmesi,
+2. Kaynak kod blokları (`code`, `pre`, `monaco`, `prism`) ile model tarafından üretilen teknik çıktıların bütünlüğünün korunması,
+3. Arka planda çalışan bir dosya sistemi izleyicisi aracılığıyla Antigravity güncellemelerinin tespit edilerek çeviri katmanının otomatik olarak yeniden uygulanmasıdır.
 
 ---
 
-## 🏗️ Mimari Akış Şeması
+## 2. Sistem Mimarisi
+
+Sistem üç temel katmandan oluşmaktadır:
 
 ```mermaid
 flowchart TD
-    subgraph Kurulum [1. Kurulum Süreci (Install.cmd)]
-        A["Install.cmd"] --> B["Install-AntigravityTR.ps1"]
-        B --> C["Orijinal app.asar Yedeği Alınır"]
-        B --> D["build_locale.py -> tr-locale.js Derlenir"]
-        B --> E["patch_asar.py -> app.asar Mühürlenir"]
-        B --> F["Başlangıç Kaydı (HKCU Run) Eklenir"]
+    subgraph Katman1 ["1. Paketleme ve Mühürleme (Build & Patch)"]
+        A["tr-dictionary.json (Sözlük & Regex)"] --> B["build_locale.py (Derleyici)"]
+        B --> C["tr-locale.js"]
+        C --> D["patch_asar.py"]
+        D -->|ASAR Enjeksiyonu| E["app.asar (dist/preload.js)"]
     end
 
-    subgraph Runtime [2. Otomatik Güncelleme Koruyucusu (Addon Modu)]
-        F --> G["Watch-AntigravityUpdate.ps1 (Arka Plan)"]
-        G -->|Antigravity Güncellendi| H["Ensure-AntigravityTR.ps1"]
-        H -->|ASAR Mührü Eksikse| I["patch_asar.py --force (Sessiz Yama)"]
-        H -->|Mühürlü ise| J["İzlemeye Devam Et"]
+    subgraph Katman2 ["2. Çalışma Zamanı DOM Gözlemi (Runtime)"]
+        E --> F["Electron Preload Yüklemesi"]
+        F --> G["MutationObserver"]
+        G -->|Metin Düğümleri & Öznitelikler| H["Dinamik Türkçe Arayüz"]
+        G -.->|Filtre: monaco, prism, code| I["Dokunulmayan Kod Blokları"]
     end
 
-    subgraph Live [3. Çalışma Zamanı Enjeksiyonu]
-        E --> K["Electron preload.js Enjeksiyonu"]
-        K --> L["Reaktif MutationObserver (DOM)"]
-        L --> M["Sıfır Gecikmeli Türkçe Arayüz"]
+    subgraph Katman3 ["3. Güncelleme Direnci (Auto-Enforce Service)"]
+        J["Watch-AntigravityUpdate.ps1"] -->|FileSystemWatcher| K{"resources/app.asar Değişimi"}
+        K -->|Tetikleme| L["Ensure-AntigravityTR.ps1"]
+        L -->|Mühür Kontrolü| M{"İmza Mevcut mu?"}
+        M -->|Hayır| N["patch_asar.py --force"]
+        M -->|Evet| O["Bekleme Durumu"]
     end
 ```
 
+### 2.1. Dinamik Çeviri Motoru (`tr-locale.js`)
+- **Seçici Gözlem:** `MutationObserver` nesnesi `document.body` üzerindeki `childList`, `characterData` ve belirli öznitelikleri (`placeholder`, `title`, `aria-label`) izler.
+- **Döngü Koruması:** Yeniden tetiklemeleri engellemek amacıyla mutasyon sırasında `isMutating` bayrağı ile re-entry denetimi yapılır.
+- **Korumalı Alanlar:** Kod editörleri, markdown gövdeleri ve terminal çıktıları (`monaco-editor`, `markdown-body`, `prism`, `code`, `pre`, `textarea`) çeviri kapsamı dışında tutulur.
+
+### 2.2. Güncelleme İzleyici Servisi (`Watch-AntigravityUpdate.ps1`)
+- Uygulama dizinindeki (`$env:LOCALAPPDATA\Programs\antigravity\resources`) `app.asar` dosyasını `System.IO.FileSystemWatcher` sınıfı ile dinler.
+- Yeni bir Electron güncellemesi indirildiğinde, dosya yazım işlemi bittikten sonra `Ensure-AntigravityTR.ps1` çağrılarak bütünlük doğrulaması yapılır ve mühür eksikse yama sessizce uygulanır.
+
 ---
 
-## 📸 Ekran Görüntüleri
+## 3. Arayüz Bileşenleri
 
-### Canlı Arayüz Görünümü
-![Antigravity Türkçe Arayüz](docs/screenshots/antigravity_turkish_main.png)
+Aşağıdaki ekran görüntüleri, modül tarafından çevrilen genel arayüz alanlarını ve menü yapılarını göstermektedir:
 
 <div align="center">
   <table>
     <tr>
-      <td width="50%">
-        <img src="docs/screenshots/model_selection.png" alt="Model ve Düşünme Seviyesi Menüsü" />
-        <p align="center"><b>Model & Düşünme Seviyesi Menüsü</b></p>
+      <td width="50%" align="center">
+        <img src="docs/screenshots/menu_navigation.png" alt="Menü Çubuğu ve Gezinme Paneli" />
+        <p><b>Şekil 1:</b> Menü Çubuğu ve Ana Gezinme Paneli</p>
       </td>
-      <td width="50%">
-        <img src="docs/screenshots/settings_app.png" alt="Ayarlar Paneli" />
-        <p align="center"><b>Ayarlar ve Tercihler</b></p>
+      <td width="50%" align="center">
+        <img src="docs/screenshots/model_selection.png" alt="Model ve Düşünme Seviyesi Seçimi" />
+        <p><b>Şekil 2:</b> Model Seçimi, Düşünme Seviyeleri ve Kota Paneli</p>
       </td>
     </tr>
     <tr>
-      <td width="50%">
-        <img src="docs/screenshots/delete_project.png" alt="Tehlikeli Bölge ve Dinamik Sayaçlar" />
-        <p align="center"><b>Tehlikeli Bölge & Dinamik Sayaçlar</b></p>
+      <td width="50%" align="center">
+        <img src="docs/screenshots/settings_sections.png" alt="Ayarlar Kategorileri" />
+        <p><b>Şekil 3:</b> Ayarlar Kategorileri (Uygulama, Görünüm, Bildirimler)</p>
       </td>
-      <td width="50%">
-        <img src="docs/screenshots/shortcuts_search.png" alt="Kısayollar Arama Kutusu" />
-        <p align="center"><b>Kısayollar ve Arama Arayüzü</b></p>
+      <td width="50%" align="center">
+        <img src="docs/screenshots/shortcuts_search.png" alt="Kısayollar Arama Arayüzü" />
+        <p><b>Şekil 4:</b> Kısayollar Penceresi ve Dinamik Arama Alanı</p>
       </td>
     </tr>
   </table>
@@ -97,59 +91,78 @@ flowchart TD
 
 ---
 
-## 🚀 Hızlı Kurulum
+## 4. Kurulum Prosedürü
 
-### Yöntem 1: Tek Tıkla Kurulum (Önerilen)
-1. Bu depoyu indirin (`Code -> Download ZIP` veya `git clone`).
-2. Klasör içindeki **`Install.cmd`** dosyasına çift tıklayın.
-3. Kurulum otomatik olarak Python ortamını bulacak, yamayı uygulayacak ve güncelleme izleyicisini başlatacaktır.
+### Gereksinimler
+- Windows 10 veya Windows 11 (x64)
+- Python 3.10 veya üzeri
+- Google Antigravity masaüstü uygulaması
 
-### Yöntem 2: PowerShell ile Kurulum
+### Yöntem A: Otomatik Kurulum (Komut Dosyası)
+1. Bu depoyu klonlayın veya arşiv olarak indirin:
+   ```powershell
+   git clone https://github.com/illetyus/antigravty-turkish.git
+   cd antigravty-turkish
+   ```
+2. `Install.cmd` dosyasını çalıştırın (veya doğrudan PowerShell üzerinden `.\Install-AntigravityTR.ps1`).
+
+Kurulum betiği aşağıdaki adımları otomatik olarak tamamlar:
+- `app.asar.bak.original` adıyla fabrika yedeğini oluşturur.
+- Güncel sözlük veritabanından `tr-locale.js` modülünü derler.
+- ASAR arşivini mühürler.
+- Windows başlangıç kaydına (`HKCU:\Software\Microsoft\Windows\CurrentVersion\Run`) arka plan izleyicisini ekler.
+- Antigravity açık durumda ise CDP WebSocket üzerinden canlı oturuma sıcak enjeksiyon uygular.
+
+---
+
+## 5. Kaldırma Prosedürü (Rollback)
+
+Yamayı tamamen kaldırmak ve uygulamayı orijinal fabrika ayarlarına döndürmek için:
+
 ```powershell
-# Depo dizininde:
-.\Install-AntigravityTR.ps1
+.\Uninstall-AntigravityTR.ps1
 ```
+veya `Uninstall.cmd` dosyasını çalıştırın.
+
+Bu işlem:
+1. Windows başlangıcındaki izleyici görev kaydını siler ve çalışan izleyici süreçlerini sonlandırır.
+2. `app.asar.bak.original` yedeğini asıl arşivin üzerine kopyalayarak uygulamayı orijinal durumuna getirir.
 
 ---
 
-## 🗑️ Kaldırma (Uninstallation)
+## 6. Doğrulama ve Test Metodolojisi
 
-İstediğiniz zaman tek bir tıklamayla Antigravity'yi orijinal İngilizce sürümüne döndürebilirsiniz:
-
-1. Klasördeki **`Uninstall.cmd`** dosyasını çalıştırın (veya PowerShell'de `.\Uninstall-AntigravityTR.ps1`).
-2. Arka plan izleyici kaldırılır ve ilk kurulumdaki `app.asar.bak.original` yedeği yerine konur.
-
----
-
-## 🛠️ Geliştirici & Manuel Komutlar
-
-Sözlüğü genişletmek veya testleri çalıştırmak için:
+Modülün kararlılığı ve dosya bütünlüğü `test_tr_patch.py` doğrulama paketi ile denetlenmektedir:
 
 ```powershell
-# 1. Sözlükteki yeni terimleri derleyin:
-python build_locale.py
-
-# 2. 12 adımlı tam test paketini çalıştırın:
 python test_tr_patch.py
-
-# 3. Canlı açık pencereye sıcak enjeksiyon yapın:
-node hot_apply.js
-
-# 4. ASAR bütünlük kontrolü:
-python patch_asar.py --check
 ```
 
+Test Kapsamı:
+1. `app.asar` dosya varlığı ve SHA256 blok bütünlüğü denetimi
+2. ASAR arşiv yapısının geçerliliği (740+ dosya indeksi doğrulaması)
+3. `preload.js` mühür imzasının (`ANTIGRAVITY_TR_PATCH_V1`) varlığı
+4. `dist/menu.js` menü girişlerinin çeviri denetimi
+5. `dist/tray.js` sistem tepsisi metin denetimi
+6. `dist/main.js` sistem iletişim pencerelerinin çeviri denetimi
+7. `dist/updater.js` güncelleme bildirimlerinin çeviri denetimi
+8. Geri alma yedeğinin (`backups/`) mevcudiyet kontrolü
+9. `tr-dictionary.json` şema ve sözdizimi geçerliliği (710 terim, 39 regex)
+10. `tr-locale.js` öznitelik gözlemcisi ve döngü engelleyici (`isMutating`) analizi
+11. `Watch-AntigravityUpdate.ps1` PowerShell 5.1 / 7 uyumluluk denetimi
+12. `Ensure-AntigravityTR.ps1` parametre iletim testi
+
 ---
 
-## 🛡️ Güvenlik ve Gizlilik
+## 7. Güvenlik ve Gizlilik Bildirimi
 
-- Bu yama **%100 açık kaynaklıdır** ve tamamen yerel makinenizde çalışır.
-- Hiçbir harici sunucuya veri göndermez, telemetri toplamaz veya ağ bağlantısı açmaz.
-- Model yanıtlarını, kod bloklarını ve terminal çıktılarını asla değiştirmez.
+- Bu yazılım harici herhangi bir sunucuya ağ bağlantısı kurmaz; telemetri, analitik veri veya kullanıcı günlüğü toplamaz.
+- Kullanıcıya ait proje dosyaları, sohbet geçmişi ve API anahtarları yerel dosya sisteminde olduğu gibi korunur.
+- Tüm işlemler yerel makine üzerinde, işletim sistemi sınırları dahilinde yürütülür.
 
 ---
 
-## 📄 Lisans
+## 8. Lisans
 
-Bu proje [MIT Lisansı](LICENSE) altında lisanslanmıştır.
-Katkılarınız için [CONTRIBUTING.md](CONTRIBUTING.md) belgesini inceleyebilirsiniz.
+Bu proje [MIT Lisansı](LICENSE) kapsamında sunulmaktadır.
+Katkı kuralları için [CONTRIBUTING.md](CONTRIBUTING.md) dosyasına başvurabilirsiniz.

@@ -27,7 +27,7 @@ def read_asar(asar_path):
         v1, v2, v3, v4 = struct.unpack("<IIII", f.read(16))
         header_json_bytes = f.read(v4)
         header = json.loads(header_json_bytes.decode("utf-8"))
-        data_start = 16 + v4
+        data_start = 8 + v2
 
         files_data = {}
 
@@ -84,14 +84,18 @@ def write_asar(out_path, header, files_data):
 
     header_json = json.dumps(header, separators=(",", ":")).encode("utf-8")
     header_str_len = len(header_json)
-    header_obj_size = header_str_len + 4
-    header_size = header_str_len + 8
+    pad = (4 - (header_str_len % 4)) % 4
+    header_padding = b"\0" * pad
+    header_obj_size = header_str_len + pad + 4
+    header_size = header_str_len + pad + 8
     magic = 4
 
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     with open(out_path, "wb") as f:
         f.write(struct.pack("<IIII", magic, header_size, header_obj_size, header_str_len))
         f.write(header_json)
+        if pad > 0:
+            f.write(header_padding)
 
         # Write files in the exact order of offsets
         def write_files(node, prefix=""):

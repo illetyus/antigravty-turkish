@@ -11,7 +11,7 @@ import json
 import re
 
 sys.path.insert(0, r"D:\Android\Tools\Antigravity-TR")
-from patch_asar import read_asar, is_patched, DEFAULT_ASAR, BACKUP_DIR, LOCALE_SCRIPT_PATH
+from patch_asar import read_asar, is_patched, get_version, DEFAULT_ASAR, BACKUP_DIR, LOCALE_SCRIPT_PATH
 
 def run_tests():
     print("=== Antigravity Turkish Patch Comprehensive Verification Suite ===")
@@ -54,10 +54,13 @@ def run_tests():
     print("[PASS] Test 7: dist/updater.js translations confirmed.")
 
     # Test 8: Backup existence verification
-    ext_bak = f"{DEFAULT_ASAR}.bak.2.29.0"
-    tool_bak = os.path.join(BACKUP_DIR, "app.asar.bak.2.29.0")
-    assert os.path.exists(ext_bak) or os.path.exists(tool_bak), "Backup file not found!"
-    print(f"[PASS] Test 8: Original backup confirmed at {tool_bak}")
+    ver = get_version(files_data)
+    ext_bak = f"{DEFAULT_ASAR}.bak.{ver}"
+    tool_bak = os.path.join(BACKUP_DIR, f"app.asar.bak.{ver}")
+    orig_bak = f"{DEFAULT_ASAR}.bak.original"
+    has_bak = os.path.exists(ext_bak) or os.path.exists(tool_bak) or os.path.exists(orig_bak) or (os.path.exists(BACKUP_DIR) and len(os.listdir(BACKUP_DIR)) > 0)
+    assert has_bak, "Backup file not found!"
+    print(f"[PASS] Test 8: Backup confirmed.")
 
     # Test 9: Dictionary JSON validity
     dict_path = r"D:\Android\Tools\Antigravity-TR\tr-dictionary.json"

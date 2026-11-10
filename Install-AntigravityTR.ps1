@@ -1,4 +1,4 @@
-# Google Antigravity Türkçe Yama Kurulum Aracı (Installer)
+﻿# Google Antigravity Türkçe Yama Kurulum Aracı (Installer)
 # Path: D:\Android\Tools\Antigravity-TR\Install-AntigravityTR.ps1
 
 [CmdletBinding()]
@@ -42,11 +42,22 @@ if (-not (Test-Path $AsarPath)) {
 }
 Write-Host "[+] Antigravity Kurulumu Doğrulandı: $AsarPath" -ForegroundColor Green
 
-# 3. Orijinal Yedek Güvencesi
+# 3. Orijinal Yedek Güvencesi (Sadece yamasız fabrika ASAR'ını yedekle)
 $BakOriginal = "$AsarPath.bak.original"
+$PatcherScript = Join-Path $ScriptDir "patch_asar.py"
 if (-not (Test-Path $BakOriginal)) {
-    Copy-Item $AsarPath $BakOriginal -Force
-    Write-Host "[+] Orijinal fabrika yedeği alındı: $BakOriginal" -ForegroundColor Green
+    & $PythonExe $PatcherScript --asar $AsarPath --check *>$null
+    if ($LASTEXITCODE -ne 0) {
+        Copy-Item $AsarPath $BakOriginal -Force
+        Write-Host "[+] Orijinal fabrika yedeği alındı: $BakOriginal" -ForegroundColor Green
+    } else {
+        $cleanBak = Get-ChildItem (Join-Path $ScriptDir "backups") -Filter "app.asar.bak.*" -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($cleanBak) {
+            Copy-Item $cleanBak.FullName $BakOriginal -Force
+            Write-Host "[+] Mevcut temiz yedekten fabrika yedeği oluşturuldu: $BakOriginal" -ForegroundColor Green
+        }
+    }
 } else {
     Write-Host "[*] Orijinal fabrika yedeği zaten mevcut, korundu." -ForegroundColor DarkGray
 }
@@ -71,10 +82,18 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "[+] ASAR Türkçe yaması başarıyla diske uygulandı!" -ForegroundColor Green
 }
 
-# 6. Otomatik Güncelleme İzleyicisi (Addon) Kaydı
-Write-Host "[*] Otomatik güncelleme koruyucusu (Addon) kaydediliyor..." -ForegroundColor Yellow
+# 6. Sıfır Arka Plan Görevli Addon & Kısayol Koruması Kaydı
+Write-Host "[*] Addon koruma kancası ve başlatıcı kısayollar yapılandırılıyor..." -ForegroundColor Yellow
 $RegisterScript = Join-Path $ScriptDir "Register-AntigravityTRTask.ps1"
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $RegisterScript
+
+# 6.5. Hızlı açılış mühür damgasını güncelle
+try {
+    $fso = New-Object -ComObject Scripting.FileSystemObject
+    $f = $fso.GetFile($AsarPath)
+    $stamp = "$($f.Size)|$($f.DateLastModified)"
+    [System.IO.File]::WriteAllText((Join-Path $ScriptDir ".last_patched_stamp"), $stamp, [System.Text.UTF8Encoding]::new($false))
+} catch {}
 
 # 7. Canlı Uygulama Sıcak Enjeksiyonu (Antigravity Açıksa)
 $DevPortFile = "$env:APPDATA\antigravity\DevToolsActivePort"
@@ -94,8 +113,9 @@ if (Test-Path $DevPortFile) {
 
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "  TEBRİKLER! Antigravity Türkçe Yama Başarıyla Kuruldu.  " -ForegroundColor White
-Write-Host "  Antigravity güncellense dahi sistem kendini koruyacak. " -ForegroundColor Cyan
-Write-Host "  Kaldırmak için Uninstall.cmd dosyasını çalıştırabilirsiniz." -ForegroundColor DarkGray
+Write-Host "  Antigravity Türkçe Yama Başarıyla Kuruldu.              " -ForegroundColor White
+Write-Host "  Arka planda sürekli çalışan hiçbir görev olmadan,       " -ForegroundColor Cyan
+Write-Host "  açılışta ve güncellemede kendini otomatik koruyacaktır.  " -ForegroundColor Cyan
+Write-Host "  Kaldırmak için Uninstall.cmd dosyasını çalıştırın.      " -ForegroundColor DarkGray
 Write-Host "==========================================================" -ForegroundColor Green
 Write-Host ""

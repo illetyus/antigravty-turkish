@@ -46,7 +46,7 @@ Eğer arayüzde İngilizce kalmış bir alan fark ederseniz:
 
 - Tüm dosya ve kaynak kodlar **UTF-8** kodlamasında olmalıdır.
 - Kod veya Monaco Editor blokları içindeki metinler çevrilmemelidir (`isProtected` filtresi korunmalıdır).
-- Yapılan her değişiklikten sonra `test_tr_patch.py` içindeki tüm testler (`12/12`) yeşil geçmelidir.
+- Yapılan her değişiklikten sonra `test_tr_patch.py` içindeki tüm testler (`14/14`) yeşil geçmelidir.
 
 ---
 

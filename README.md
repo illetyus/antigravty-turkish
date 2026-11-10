@@ -5,7 +5,7 @@ Bu depo, **Google Antigravity 2.0** masaüstü çalışma ortamı için gelişti
 [![Lisans: MIT](https://img.shields.io/badge/Lisans-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078D6.svg)](https://microsoft.com)
 [![Hedef Sürüm](https://img.shields.io/badge/Antigravity-v2.29%2B-4285F4.svg)](https://deepmind.google)
-[![Test Durumu](https://img.shields.io/badge/Do%C4%9Frulama-12%2F12%20Ge%C3%A7ti-success.svg)](#doğrulama-ve-test-metodolojisi)
+[![Test Durumu](https://img.shields.io/badge/Do%C4%9Frulama-14%2F14%20Ge%C3%A7ti-success.svg)](#doğrulama-ve-test-metodolojisi)
 
 ---
 
@@ -16,7 +16,7 @@ Google Antigravity, Electron tabanlı bir masaüstü yapay zeka arayüzüdür. U
 Bu çalışmanın hedefleri:
 1. Uygulama arayüz metinlerinin, özniteliklerinin (`placeholder`, `title`, `aria-label`) ve dinamik sayısal/zamansal sayaçlarının performans kaybı yaratmaksızın Türkçe diline dönüştürülmesi,
 2. Kaynak kod blokları (`code`, `pre`, `monaco`, `prism`) ile model tarafından üretilen teknik çıktıların bütünlüğünün korunması,
-3. Arka planda çalışan bir dosya sistemi izleyicisi aracılığıyla Antigravity güncellemelerinin tespit edilerek çeviri katmanının otomatik olarak yeniden uygulanmasıdır.
+3. Arka planda sürekli bir servis veya izleyici çalıştırmaksızın, uygulama içi güncelleme kancası (`dist/updater.js`) ve hızlı açılış sarmalayıcısı (`Launch-Antigravity.vbs`) üzerinden güncellemeler sonrasında çeviri katmanının otomatik olarak yeniden uygulanmasıdır.
 
 ---
 
@@ -30,7 +30,7 @@ flowchart TD
         A["tr-dictionary.json (Sözlük & Regex)"] --> B["build_locale.py (Derleyici)"]
         B --> C["tr-locale.js"]
         C --> D["patch_asar.py"]
-        D -->|ASAR Enjeksiyonu| E["app.asar (dist/preload.js)"]
+        D -->|ASAR Enjeksiyonu| E["app.asar (dist/preload.js + dist/updater.js)"]
     end
 
     subgraph Katman2 ["2. Çalışma Zamanı DOM Gözlemi (Runtime)"]
@@ -40,12 +40,13 @@ flowchart TD
         G -.->|Filtre: monaco, prism, code| I["Dokunulmayan Kod Blokları"]
     end
 
-    subgraph Katman3 ["3. Güncelleme Direnci (Auto-Enforce Service)"]
-        J["Watch-AntigravityUpdate.ps1"] -->|FileSystemWatcher| K{"resources/app.asar Değişimi"}
-        K -->|Tetikleme| L["Ensure-AntigravityTR.ps1"]
-        L -->|Mühür Kontrolü| M{"İmza Mevcut mu?"}
-        M -->|Hayır| N["patch_asar.py --force"]
-        M -->|Evet| O["Bekleme Durumu"]
+    subgraph Katman3 ["3. Sıfır Arka Plan Görevli Güncelleme Koruması (Addon Modu)"]
+        J["Kısayol / Launch-Antigravity.vbs"] -->|~10ms Damga Kontrolü| K{"Mühür Geçerli mi?"}
+        K -->|Evet| L["Antigravity.exe Başlat"]
+        K -->|Hayır| M["Ensure-AntigravityTR.ps1"]
+        M --> L
+        N["dist/updater.js (update-downloaded)"] -->|Güncelleme Kapanışında 1 Kez| O["PostUpdate-AntigravityTR.ps1"]
+        O -->|Yeni app.asar Mühürle & Çık| E
     end
 ```
 
@@ -54,9 +55,10 @@ flowchart TD
 - **Döngü Koruması:** Yeniden tetiklemeleri engellemek amacıyla mutasyon sırasında `isMutating` bayrağı ile re-entry denetimi yapılır.
 - **Korumalı Alanlar:** Kod editörleri, markdown gövdeleri ve terminal çıktıları (`monaco-editor`, `markdown-body`, `prism`, `code`, `pre`, `textarea`) çeviri kapsamı dışında tutulur.
 
-### 2.2. Güncelleme İzleyici Servisi (`Watch-AntigravityUpdate.ps1`)
-- Uygulama dizinindeki (`$env:LOCALAPPDATA\Programs\antigravity\resources`) `app.asar` dosyasını `System.IO.FileSystemWatcher` sınıfı ile dinler.
-- Yeni bir Electron güncellemesi indirildiğinde, dosya yazım işlemi bittikten sonra `Ensure-AntigravityTR.ps1` çağrılarak bütünlük doğrulaması yapılır ve mühür eksikse yama sessizce uygulanır.
+### 2.2. Sıfır Arka Plan Görevli Güncelleme Koruması (`dist/updater.js` + `Launch-Antigravity.vbs`)
+- Sistem arka planında sürekli bekleyen hiçbir PowerShell veya izleyici süreci çalıştırılmaz.
+- **Uygulama İçi Addon Kancası:** `dist/updater.js` içine eklenen kanca yalnızca yeni bir güncelleme indirildiğinde (`update-downloaded`) aktifleşir; uygulama güncelleme kurmak üzere kapanırken tek seferlik `PostUpdate-AntigravityTR.ps1` sürecini başlatır. Bu süreç yeni `app.asar` yazıldığı anda yamayı ve kısayolları uygulayıp derhal sonlanır.
+- **Açılış Koruması:** Başlat Menüsü, Görev Çubuğu ve Masaüstü kısayolları görünmez `Launch-Antigravity.vbs` başlatıcısına bağlanır; her açılışta ~10 ms içinde damga doğrulaması yapılır ve yalnızca yama eksikse `Ensure-AntigravityTR.ps1` çalıştırılarak uygulama Türkçe açılır.
 
 ---
 
@@ -109,8 +111,8 @@ Aşağıdaki ekran görüntüleri, modül tarafından çevrilen genel arayüz al
 Kurulum betiği aşağıdaki adımları otomatik olarak tamamlar:
 - `app.asar.bak.original` adıyla fabrika yedeğini oluşturur.
 - Güncel sözlük veritabanından `tr-locale.js` modülünü derler.
-- ASAR arşivini mühürler.
-- Windows başlangıç kaydına (`HKCU:\Software\Microsoft\Windows\CurrentVersion\Run`) arka plan izleyicisini ekler.
+- ASAR arşivini (`dist/preload.js` ve `dist/updater.js` kancası dahil) mühürler.
+- Başlat Menüsü, Görev Çubuğu ve Masaüstü kısayollarını görünmez `Launch-Antigravity.vbs` başlatıcısına bağlar (arka planda sürekli görev çalıştırmaz).
 - Antigravity açık durumda ise CDP WebSocket üzerinden canlı oturuma sıcak enjeksiyon uygular.
 
 ---
@@ -125,7 +127,7 @@ Yamayı tamamen kaldırmak ve uygulamayı orijinal fabrika ayarlarına döndürm
 veya `Uninstall.cmd` dosyasını çalıştırın.
 
 Bu işlem:
-1. Windows başlangıcındaki izleyici görev kaydını siler ve çalışan izleyici süreçlerini sonlandırır.
+1. Kısayolları orijinal `Antigravity.exe` yedeklerine geri yükler ve varsa eski başlangıç kayıtlarını temizler.
 2. `app.asar.bak.original` yedeğini asıl arşivin üzerine kopyalayarak uygulamayı orijinal durumuna getirir.
 
 ---
@@ -145,12 +147,14 @@ Test Kapsamı:
 4. `dist/menu.js` menü girişlerinin çeviri denetimi
 5. `dist/tray.js` sistem tepsisi metin denetimi
 6. `dist/main.js` sistem iletişim pencerelerinin çeviri denetimi
-7. `dist/updater.js` güncelleme bildirimlerinin çeviri denetimi
+7. `dist/updater.js` güncelleme bildirimleri ve `ANTIGRAVITY_TR_UPDATER_HOOK_V1` kancası denetimi
 8. Geri alma yedeğinin (`backups/`) mevcudiyet kontrolü
-9. `tr-dictionary.json` şema ve sözdizimi geçerliliği (710 terim, 39 regex)
+9. `tr-dictionary.json` şema ve sözdizimi geçerliliği (727 terim, 58 regex)
 10. `tr-locale.js` öznitelik gözlemcisi ve döngü engelleyici (`isMutating`) analizi
-11. `Watch-AntigravityUpdate.ps1` PowerShell 5.1 / 7 uyumluluk denetimi
+11. Sıfır arka plan görevi durumu ve PowerShell betiklerinin sözdizimi denetimi
 12. `Ensure-AntigravityTR.ps1` parametre iletim testi
+13. Tek seferlik `PostUpdate-AntigravityTR.ps1` koruyucusunun güncelleme simülasyonunda yeniden yamalayıp çıkış yapması
+14. `Configure-AntigravityShortcuts.ps1` kısayol sarmalama ve orijinal hedefe geri yükleme testi
 
 ---
 

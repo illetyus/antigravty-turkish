@@ -1,4 +1,4 @@
-# Antigravity Turkish Auto-Enforcer
+﻿# Antigravity Turkish Auto-Enforcer
 # Path: D:\Android\Tools\Antigravity-TR\Ensure-AntigravityTR.ps1
 
 [CmdletBinding()]
@@ -45,11 +45,24 @@ if ($Restore) {
     exit $LASTEXITCODE
 }
 
+function Write-FsoStamp {
+    param([string]$Path)
+    try {
+        if (-not (Test-Path $Path)) { return }
+        $fso = New-Object -ComObject Scripting.FileSystemObject
+        $f = $fso.GetFile($Path)
+        $stamp = "$($f.Size)|$($f.DateLastModified)"
+        $stampPath = Join-Path $ScriptDir ".last_patched_stamp"
+        [System.IO.File]::WriteAllText($stampPath, $stamp, [System.Text.UTF8Encoding]::new($false))
+    } catch {}
+}
+
 # Check if already patched
 & $PythonExe $PatcherScript --asar $AsarPath --check *>$null
 $isPatched = ($LASTEXITCODE -eq 0)
 
 if ($isPatched -and (-not $Force)) {
+    Write-FsoStamp -Path $AsarPath
     Write-Host "[Antigravity-TR] Antigravity v2 arayüzü zaten Türkçe yamalı." -ForegroundColor Green
     exit 0
 }
@@ -62,6 +75,7 @@ if ($Force) {
 & $PythonExe @patchArgs
 
 if ($LASTEXITCODE -eq 0) {
+    Write-FsoStamp -Path $AsarPath
     Write-Host "[Antigravity-TR] Türkçe yama başarıyla uygulandı!" -ForegroundColor Green
 } else {
     Write-Host "[Antigravity-TR] Yama sırasında bir uyarı/hata oluştu (Antigravity çalışıyor olabilir)." -ForegroundColor Yellow

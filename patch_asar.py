@@ -15,11 +15,14 @@ import subprocess
 import hashlib
 
 PATCH_SIGNATURE = "/* ANTIGRAVITY_TR_PATCH_V1 */"
+UPDATER_HOOK_SIGNATURE = "/* ANTIGRAVITY_TR_UPDATER_HOOK_V1 */"
 
-DEFAULT_ASAR = r"C:\Users\Cemalettin R. Okatan\AppData\Local\Programs\antigravity\resources\app.asar"
-BACKUP_DIR = r"D:\Android\Tools\Antigravity-TR\backups"
-LOCALE_SCRIPT_PATH = r"D:\Android\Tools\Antigravity-TR\tr-locale.js"
-TEMP_DIR = r"D:\Android\Temp"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_ASAR = os.path.expandvars(r"%LOCALAPPDATA%\Programs\antigravity\resources\app.asar")
+BACKUP_DIR = os.path.join(SCRIPT_DIR, "backups")
+LOCALE_SCRIPT_PATH = os.path.join(SCRIPT_DIR, "tr-locale.js")
+TEMP_DIR = r"D:\Android\Temp" if os.path.isdir(r"D:\Android\Temp") else os.environ.get("TEMP", "/tmp")
+STAMP_FILE_PATH = os.path.join(SCRIPT_DIR, ".last_patched_stamp")
 
 
 def read_asar(asar_path):
@@ -111,7 +114,85 @@ def write_asar(out_path, header, files_data):
 
 def is_patched(files_data):
     preload = files_data.get("dist/preload.js", b"").decode("utf-8", errors="replace")
-    return PATCH_SIGNATURE in preload
+    if PATCH_SIGNATURE not in preload:
+        return False
+    if "dist/updater.js" in files_data:
+        updater = files_data["dist/updater.js"].decode("utf-8", errors="replace")
+        if UPDATER_HOOK_SIGNATURE not in updater:
+            return False
+    return True
+
+
+def build_updater_hook():
+    vbs_js = json.dumps(os.path.join(SCRIPT_DIR, "Start-AntigravityTR-PostUpdate.vbs"))
+    ps_js = json.dumps(os.path.join(SCRIPT_DIR, "PostUpdate-AntigravityTR.ps1"))
+    return f"""
+{UPDATER_HOOK_SIGNATURE}
+;(function () {{
+  try {{
+    if (process.platform !== 'win32') return;
+    const fsMod = require('fs');
+    const cp = require('child_process');
+    const updater = require('electron-updater').autoUpdater;
+    const {{ app }} = require('electron');
+    let pendingUpdate = false;
+    let guardSpawned = false;
+
+    function spawnPostUpdateGuard() {{
+      if (guardSpawned || !pendingUpdate) return;
+      guardSpawned = true;
+      try {{
+        const vbsScript = {vbs_js};
+        const psScript = {ps_js};
+        if (fsMod.existsSync(vbsScript)) {{
+          const child = cp.spawn('wscript.exe', [vbsScript, String(process.pid)], {{
+            detached: true,
+            stdio: 'ignore',
+            windowsHide: true,
+          }});
+          child.unref();
+        }} else if (fsMod.existsSync(psScript)) {{
+          const child = cp.spawn('powershell.exe', [
+            '-WindowStyle', 'Hidden', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+            '-File', psScript, '-OldPid', String(process.pid)
+          ], {{
+            detached: true,
+            stdio: 'ignore',
+            windowsHide: true,
+          }});
+          child.unref();
+        }}
+      }} catch (e) {{
+        console.error('[Antigravity-TR] Failed to spawn post-update guard:', e);
+      }}
+    }}
+
+    if (updater && typeof updater.on === 'function') {{
+      updater.on('update-downloaded', () => {{
+        pendingUpdate = true;
+      }});
+      if (typeof updater.quitAndInstall === 'function') {{
+        const origQuitAndInstall = updater.quitAndInstall.bind(updater);
+        updater.quitAndInstall = function (...args) {{
+          pendingUpdate = true;
+          spawnPostUpdateGuard();
+          return origQuitAndInstall(...args);
+        }};
+      }}
+    }}
+    if (app && typeof app.on === 'function') {{
+      app.on('will-quit', () => {{
+        if (pendingUpdate) spawnPostUpdateGuard();
+      }});
+      app.on('quit', () => {{
+        if (pendingUpdate) spawnPostUpdateGuard();
+      }});
+    }}
+  }} catch (e) {{
+    console.error('[Antigravity-TR] Updater hook init failed:', e);
+  }}
+}})();
+"""
 
 
 def get_version(files_data):
@@ -122,6 +203,31 @@ def get_version(files_data):
         except Exception:
             pass
     return "unknown"
+
+
+def has_any_patch(files_data):
+    preload = files_data.get("dist/preload.js", b"").decode("utf-8", errors="replace")
+    updater = files_data.get("dist/updater.js", b"").decode("utf-8", errors="replace")
+    return (PATCH_SIGNATURE in preload) or (UPDATER_HOOK_SIGNATURE in updater)
+
+
+def strip_existing_patches(files_data):
+    stripped = False
+    if "dist/preload.js" in files_data:
+        preload = files_data["dist/preload.js"].decode("utf-8")
+        idx = preload.find(PATCH_SIGNATURE)
+        if idx != -1:
+            preload = preload[:idx].rstrip() + "\n"
+            files_data["dist/preload.js"] = preload.encode("utf-8")
+            stripped = True
+    if "dist/updater.js" in files_data:
+        updater = files_data["dist/updater.js"].decode("utf-8")
+        idx = updater.find(UPDATER_HOOK_SIGNATURE)
+        if idx != -1:
+            updater = updater[:idx].rstrip() + "\n"
+            files_data["dist/updater.js"] = updater.encode("utf-8")
+            stripped = True
+    return stripped
 
 
 def apply_patch(files_data):
@@ -163,7 +269,7 @@ def apply_patch(files_data):
         tray = tray.replace(old_pattern, new_pattern)
         files_data["dist/tray.js"] = tray.encode("utf-8")
 
-    # 4. Patch dist/updater.js
+    # 4. Patch dist/updater.js (UI strings + one-shot update addon hook)
     if "dist/updater.js" in files_data:
         updater = files_data["dist/updater.js"].decode("utf-8")
         updater = updater.replace('MenuUpdateStep["CheckForUpdates"] = "Check for Updates"', 'MenuUpdateStep["CheckForUpdates"] = "Güncellemeleri Denetle"')
@@ -172,6 +278,7 @@ def apply_patch(files_data):
         updater = updater.replace('MenuUpdateStep["RestartToUpdate"] = "Restart to Update"', 'MenuUpdateStep["RestartToUpdate"] = "Güncellemek için Yeniden Başlat"')
         updater = updater.replace("title: 'Check for Updates'", "title: 'Güncellemeleri Denetle'")
         updater = updater.replace("message: 'No updates available'", "message: 'Kullanılabilir güncelleme yok'")
+        updater = updater.rstrip() + "\n\n" + build_updater_hook()
         files_data["dist/updater.js"] = updater.encode("utf-8")
 
     # 5. Patch dist/main.js
@@ -223,6 +330,8 @@ def restore_asar(asar_path):
     best_backup = candidates[0]
     print(f"[+] Restoring {asar_path} from {best_backup}")
     shutil.copy2(best_backup, asar_path)
+    if os.path.exists(STAMP_FILE_PATH):
+        os.remove(STAMP_FILE_PATH)
     print("[+] Restore completed successfully.")
     return True
 
@@ -251,18 +360,14 @@ def patch_file(asar_path, force=False, dry_run=False):
         print("[*] ASAR is already patched. Nothing to do.")
         return True
 
-    # Backup original clean version if this ASAR is unpatched
-    if not patched:
+    # Backup original clean version only if NO prior patch signatures exist
+    if not has_any_patch(files_data):
         backup_asar(asar_path, ver)
 
-    # If force requested and already patched, strip old patch first
-    if patched and force:
-        preload = files_data["dist/preload.js"].decode("utf-8")
-        idx = preload.find(PATCH_SIGNATURE)
-        if idx != -1:
-            preload = preload[:idx].rstrip() + "\n"
-            files_data["dist/preload.js"] = preload.encode("utf-8")
-        print("[*] Existing patch signature stripped for clean re-patching.")
+    # Strip old/partial patches before applying current patch cleanly
+    if force or has_any_patch(files_data):
+        if strip_existing_patches(files_data):
+            print("[*] Existing patch signatures stripped for clean re-patching.")
 
     if not apply_patch(files_data):
         return True
@@ -286,6 +391,8 @@ def patch_file(asar_path, force=False, dry_run=False):
     print(f"[+] Replacing {asar_path} with patched ASAR...")
     try:
         shutil.move(temp_out, asar_path)
+        if os.path.exists(STAMP_FILE_PATH):
+            os.remove(STAMP_FILE_PATH)
         print("[+] Success: Antigravity Turkish patch applied successfully!")
         return True
     except PermissionError:

@@ -33,6 +33,7 @@ backups/
 temp/
 *.tmp
 *.log
+.last_patched_stamp
 
 # OS & IDE
 Thumbs.db

@@ -720,7 +720,13 @@
     "Simplified interface for research, writing, and everyday tasks": "Araştırma, yazma ve günlük görevler için basitleştirilmiş arayüz",
     "Software Engineering": "Yazılım Mühendisliği",
     "Full interface for coding, developer tools, and managing agents.": "Kodlama, geliştirici araçları ve ajanları yönetmek için tam arayüz.",
-    "Full interface for coding, developer tools, and managing agents": "Kodlama, geliştirici araçları ve ajanları yönetmek için tam arayüz"
+    "Full interface for coding, developer tools, and managing agents": "Kodlama, geliştirici araçları ve ajanları yönetmek için tam arayüz",
+    "0% left": "%0 kaldı",
+    "left": "kaldı",
+    "Left": "Sol",
+    "Weekly limit,": "Haftalık sınır,",
+    "5h limit,": "5 saatlik sınır,",
+    "Weekly limit, resets in 4d 19h": "Haftalık sınır, 4g 19s içinde sıfırlanır"
   },
   "patterns": [
     {
@@ -886,6 +892,74 @@
     {
       "regex": "^Loading\\s+workspace\\s+customizations\\.\\.\\.$",
       "replace": "Çalışma alanı özelleştirmeleri yükleniyor..."
+    },
+    {
+      "regex": "^[Ww]eekly\\s+limit,\\s*[Rr]esets in\\s+(\\d+)d\\s+(\\d+)h$",
+      "replace": "Haftalık sınır, $1g $2s içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Ww]eekly\\s+limit,\\s*[Rr]esets in\\s+(\\d+)h\\s+(\\d+)m$",
+      "replace": "Haftalık sınır, $1s $2d içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Ww]eekly\\s+limit,\\s*[Rr]esets in\\s+(\\d+)d$",
+      "replace": "Haftalık sınır, $1g içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Ww]eekly\\s+limit,\\s*[Rr]esets in\\s+(\\d+)h$",
+      "replace": "Haftalık sınır, $1s içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Ww]eekly\\s+limit,\\s*[Rr]esets in\\s+(\\d+)m$",
+      "replace": "Haftalık sınır, $1d içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Ww]eekly\\s+limit,\\s*[Rr]esets in\\s+(.+)$",
+      "replace": "Haftalık sınır, $1 içinde sıfırlanır"
+    },
+    {
+      "regex": "^(\\d+h|\\d+\\s*saatlik)\\s+limit,\\s*[Rr]esets in\\s+(\\d+)h\\s+(\\d+)m$",
+      "replace": "$1 sınır, $2s $3d içinde sıfırlanır"
+    },
+    {
+      "regex": "^(\\d+h|\\d+\\s*saatlik)\\s+limit,\\s*[Rr]esets in\\s+(\\d+)h$",
+      "replace": "$1 sınır, $2s içinde sıfırlanır"
+    },
+    {
+      "regex": "^(\\d+h|\\d+\\s*saatlik)\\s+limit,\\s*[Rr]esets in\\s+(\\d+)m$",
+      "replace": "$1 sınır, $2d içinde sıfırlanır"
+    },
+    {
+      "regex": "^(\\d+h|\\d+\\s*saatlik)\\s+limit,\\s*[Rr]esets in\\s+(.+)$",
+      "replace": "$1 sınır, $2 içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Rr]esets in\\s+(\\d+)d\\s+(\\d+)h$",
+      "replace": "$1g $2s içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Rr]esets in\\s+(\\d+)h\\s+(\\d+)m$",
+      "replace": "$1s $2d içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Rr]esets in\\s+(\\d+)d$",
+      "replace": "$1g içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Rr]esets in\\s+(\\d+)h$",
+      "replace": "$1s içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Rr]esets in\\s+(\\d+)m$",
+      "replace": "$1d içinde sıfırlanır"
+    },
+    {
+      "regex": "^[Rr]esets in\\s+(.+)$",
+      "replace": "$1 içinde sıfırlanır"
+    },
+    {
+      "regex": "\\b(\\d+)%\\s+left\\b",
+      "replace": "%$1 kaldı"
     }
   ]
 }

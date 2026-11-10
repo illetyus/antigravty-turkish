@@ -23,12 +23,18 @@ def build():
     for p in d["patterns"]:
         rep = p["replace"]
         reg = p["regex"]
-        if "$2" in rep:
-            fn_body = rep.replace("$1", "${a}").replace("$2", "${b}")
-            patterns_code += f"    {{ regex: /{reg}/, fn: (_, a, b) => `{fn_body}` }},\n"
-        elif "$1" in rep:
-            fn_body = rep.replace("$1", "${n}")
-            patterns_code += f"    {{ regex: /{reg}/, fn: (_, n) => `{fn_body}` }},\n"
+        args = ["_", "a", "b", "c", "d", "e"]
+        fn_body = rep
+        max_group = 0
+        for i in range(1, 6):
+            token = f"${i}"
+            if token in rep:
+                fn_body = fn_body.replace(token, f"${{{args[i]}}}")
+                max_group = max(max_group, i)
+        
+        if max_group > 0:
+            param_list = ", ".join(args[:max_group + 1])
+            patterns_code += f"    {{ regex: /{reg}/, fn: ({param_list}) => `{fn_body}` }},\n"
         else:
             patterns_code += f"    {{ regex: /{reg}/, fn: () => `{rep}` }},\n"
     patterns_code = patterns_code.rstrip(",\n") + "\n  ];"

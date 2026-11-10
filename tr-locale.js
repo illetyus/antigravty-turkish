@@ -717,7 +717,18 @@
     "1 active conversation.": "1 etkin sohbet.",
     "1 active conversation": "1 etkin sohbet",
     "No active conversations.": "Etkin sohbet yok.",
-    "No active conversations": "Etkin sohbet yok"
+    "No active conversations": "Etkin sohbet yok",
+    "Loading token usage...": "Token kullanımı yükleniyor...",
+    "Loading token usage": "Token kullanımı yükleniyor",
+    "Loading workspace customizations...": "Çalışma alanı özelleştirmeleri yükleniyor...",
+    "Loading workspace customizations": "Çalışma alanı özelleştirmeleri yükleniyor",
+    "Interface Layout": "Arayüz Düzeni",
+    "Knowledge Work": "Bilgi Çalışması",
+    "Simplified interface for research, writing, and everyday tasks.": "Araştırma, yazma ve günlük görevler için basitleştirilmiş arayüz.",
+    "Simplified interface for research, writing, and everyday tasks": "Araştırma, yazma ve günlük görevler için basitleştirilmiş arayüz",
+    "Software Engineering": "Yazılım Mühendisliği",
+    "Full interface for coding, developer tools, and managing agents.": "Kodlama, geliştirici araçları ve ajanları yönetmek için tam arayüz.",
+    "Full interface for coding, developer tools, and managing agents": "Kodlama, geliştirici araçları ve ajanları yönetmek için tam arayüz"
 };
 
   const PATTERNS = [
@@ -759,7 +770,9 @@
     { regex: /^Search shortcuts\.\.\.$/, fn: () => `Kısayollarda ara...` },
     { regex: /^Search shortcuts$/, fn: () => `Kısayollarda ara` },
     { regex: /^Search settings\.\.\.$/, fn: () => `Ayarlarda ara...` },
-    { regex: /^Search settings$/, fn: () => `Ayarlarda ara` }
+    { regex: /^Search settings$/, fn: () => `Ayarlarda ara` },
+    { regex: /^Loading\s+token\s+usage\.\.\.$/, fn: () => `Token kullanımı yükleniyor...` },
+    { regex: /^Loading\s+workspace\s+customizations\.\.\.$/, fn: () => `Çalışma alanı özelleştirmeleri yükleniyor...` }
   ];
 
   const IGNORE_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "PRE", "CODE", "TEXTAREA"]);

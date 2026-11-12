@@ -84,8 +84,7 @@ jobs:
         run: |
           set -euo pipefail
           tmp=$(mktemp -d "$RUNNER_TEMP/zizmor.XXXXXXXX")
-          printf '{}\n' > "$tmp/config.yml"
-          if ! zizmor --offline --strict-collection --config "$tmp/config.yml" --min-severity high --format json . > "$tmp/result.json" 2> "$tmp/scanner.log"; then
+          if ! zizmor --offline --strict-collection --no-config --min-severity high --format json . > "$tmp/result.json" 2> "$tmp/scanner.log"; then
             python3 - "$tmp/result.json" <<'PY'
           import collections
           import json

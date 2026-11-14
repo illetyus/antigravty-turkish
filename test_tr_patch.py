@@ -245,8 +245,23 @@ def run_tests():
         assert required_snippet in locale_src, f"Missing translation entry: {required_snippet}"
     print("[PASS] Test 15: Sidebar/conversation translations verified in tr-locale.js.")
 
+    # Test 16: Extended UI, welcome, panel, and skill/plugin translations present in tr-locale.js
+    for required_snippet in [
+        '"Conversation Archived": "Sohbet Arşivlendi"',
+        '"Copy Project Name": "Proje Adını Kopyala"',
+        '"Show in File Explorer": "Dosya Gezgininde Göster"',
+        '"Group By": "Grupla"',
+        '"Customize Sections": "Bölümleri Özelleştir"',
+        '"Search or enter a URL": "Ara veya bir URL gir"',
+        '"Local Checkout": "Yerel Kopya"',
+        'Good to see you,',
+        '"Unlock the power of agent swarms.": "Ajan sürülerinin (swarm) gücünü açığa çıkarın."',
+    ]:
+        assert required_snippet in locale_src, f"Missing extended translation entry: {required_snippet}"
+    print("[PASS] Test 16: Extended UI, welcome, panel, and skill translations verified in tr-locale.js.")
+
     print("\n==========================================")
-    print("ALL 15 TESTS PASSED SUCCESSFULLY (15/15).")
+    print("ALL 16 TESTS PASSED SUCCESSFULLY (16/16).")
     print("==========================================")
     return True
 

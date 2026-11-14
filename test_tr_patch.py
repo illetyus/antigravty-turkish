@@ -260,8 +260,17 @@ def run_tests():
         assert required_snippet in locale_src, f"Missing extended translation entry: {required_snippet}"
     print("[PASS] Test 16: Extended UI, welcome, panel, and skill translations verified in tr-locale.js.")
 
+    # Test 17: Unavailable badge and rule summary translations present in tr-locale.js
+    for required_snippet in [
+        '"Unavailable": "Kullanılamıyor"',
+        'OpenAI Codex Security — Antigravity Runtime & Tool Mapping',
+        'Colab CLI Guardrails',
+    ]:
+        assert required_snippet in locale_src, f"Missing translation entry: {required_snippet}"
+    print("[PASS] Test 17: Unavailable badge and rule summary translations verified in tr-locale.js.")
+
     print("\n==========================================")
-    print("ALL 16 TESTS PASSED SUCCESSFULLY (16/16).")
+    print("ALL 17 TESTS PASSED SUCCESSFULLY (17/17).")
     print("==========================================")
     return True
 

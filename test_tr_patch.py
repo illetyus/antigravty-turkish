@@ -232,8 +232,21 @@ def run_tests():
     finally:
         shutil.rmtree(lnk_root, ignore_errors=True)
 
+    # Test 15: Sidebar/conversation translations present in tr-locale.js
+    locale_path = os.path.join(SCRIPT_DIR, "tr-locale.js")
+    with open(locale_path, "r", encoding="utf-8") as f:
+        locale_src = f.read()
+    for required_snippet in [
+        '"Pinned Conversations": "Sabitlenen Sohbetler"',
+        '"Archive Conversation": "Sohbeti Arşivle"',
+        '"Unpin": "Sabitlemeyi Kaldır"',
+        '/^Updated\\s+(.+)$/',
+    ]:
+        assert required_snippet in locale_src, f"Missing translation entry: {required_snippet}"
+    print("[PASS] Test 15: Sidebar/conversation translations verified in tr-locale.js.")
+
     print("\n==========================================")
-    print("ALL 14 TESTS PASSED SUCCESSFULLY (14/14).")
+    print("ALL 15 TESTS PASSED SUCCESSFULLY (15/15).")
     print("==========================================")
     return True
 

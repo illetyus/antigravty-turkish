@@ -129,6 +129,7 @@
     "Load older messages": "Daha eski mesajları yükle",
     "Add context": "Bağlam ekle",
     "Archive conversation": "Sohbeti arşivle",
+    "Archive Conversation": "Sohbeti Arşivle",
     "Bad response": "Kötü yanıt",
     "Good response": "İyi yanıt",
     "Create New Project": "Yeni Proje Oluştur",
@@ -139,6 +140,8 @@
     "More options": "Daha fazla seçenek",
     "New Conversation in Project": "Projede Yeni Sohbet",
     "Pin conversation": "Sohbeti sabitle",
+    "Pinned Conversations": "Sabitlenen Sohbetler",
+    "Unpin": "Sabitlemeyi Kaldır",
     "Project options": "Proje seçenekleri",
     "Record voice memo": "Ses kaydı al",
     "Scroll to Bottom": "En Alta Kaydır",
@@ -795,7 +798,8 @@
     { regex: /^[Rr]esets in\s+(\d+)h$/, fn: (_, a) => `${a}s içinde sıfırlanır` },
     { regex: /^[Rr]esets in\s+(\d+)m$/, fn: (_, a) => `${a}d içinde sıfırlanır` },
     { regex: /^[Rr]esets in\s+(.+)$/, fn: (_, a) => `${a} içinde sıfırlanır` },
-    { regex: /\b(\d+)%\s+left\b/, fn: (_, a) => `%${a} kaldı` }
+    { regex: /\b(\d+)%\s+left\b/, fn: (_, a) => `%${a} kaldı` },
+    { regex: /^Updated\s+(.+)$/, fn: (_, a) => `Güncellendi: ${a}` }
   ];
 
   const IGNORE_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "PRE", "CODE", "TEXTAREA"]);

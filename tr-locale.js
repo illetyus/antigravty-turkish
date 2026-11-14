@@ -786,7 +786,8 @@
     "ONLY for the native-swarm worker whose brief says it is the monitor. On a timer, it checks whether the whole swarm has stalled and calls on the one member who can unstick it. Coordinators and other workers: do not load this.": "Yalnızca izleyici (monitor) olarak görevlendirilen yerel sürü çalışanı içindir; sürünün takılıp takılmadığını denetler.",
     "Discover UI plugin panels relevant to the current task and surface a one-click pill in chat to open (toggle) them in the side pane. Use when a running UI plugin's panel would help with what the user is doing, or right after the user enables a new UI plugin pane and a shortcut to open it is handy.": "Geçerli görevle ilgili arayüz eklenti panellerini keşfeder ve yan bölmede açmak için tek tıkla kısayol sunar.",
     "Operate Google Colab CPU, GPU, and TPU runtimes via the colab CLI, execute local scripts/notebooks, and manage remote files via the colab CLI.": "colab CLI üzerinden Google Colab CPU, GPU ve TPU çalışma zamanlarını yönetir, betik/not defteri çalıştırır ve uzak dosyaları yönetir.",
-    "Unlock the power of agent swarms.": "Ajan sürülerinin (swarm) gücünü açığa çıkarın."
+    "Unlock the power of agent swarms.": "Ajan sürülerinin (swarm) gücünü açığa çıkarın.",
+    "Unavailable": "Kullanılamıyor"
 };
 
   const PATTERNS = [
@@ -849,7 +850,9 @@
     { regex: /^[Rr]esets in\s+(.+)$/, fn: (_, a) => `${a} içinde sıfırlanır` },
     { regex: /\b(\d+)%\s+left\b/, fn: (_, a) => `%${a} kaldı` },
     { regex: /^Updated\s+(.+)$/, fn: (_, a) => `Güncellendi: ${a}` },
-    { regex: /^Good to see you,\s*(.+?)\.\s*What's next\?$/, fn: (_, a) => `Seni görmek güzel, ${a}. Sırada ne var?` }
+    { regex: /^Good to see you,\s*(.+?)\.\s*What's next\?$/, fn: (_, a) => `Seni görmek güzel, ${a}. Sırada ne var?` },
+    { regex: /^# OpenAI Codex Security — Antigravity Runtime & Tool Mapping[\s\S]*$/, fn: () => `# OpenAI Codex Security — Antigravity Çalışma Zamanı ve Araç Eşlemesi (codex-security)` },
+    { regex: /^# Colab CLI Guardrails - \*\*Protect quota and billing\*\*[\s\S]*$/, fn: () => `# Colab CLI Koruma Kuralları — Kota ve faturalandırmayı koruyun: Onay olmadan Colab VM ayırmayın.` }
   ];
 
   const IGNORE_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "PRE", "CODE", "TEXTAREA"]);

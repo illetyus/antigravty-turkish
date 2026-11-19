@@ -787,8 +787,30 @@
     "Discover UI plugin panels relevant to the current task and surface a one-click pill in chat to open (toggle) them in the side pane. Use when a running UI plugin's panel would help with what the user is doing, or right after the user enables a new UI plugin pane and a shortcut to open it is handy.": "Geçerli görevle ilgili arayüz eklenti panellerini keşfeder ve yan bölmede açmak için tek tıkla kısayol sunar.",
     "Operate Google Colab CPU, GPU, and TPU runtimes via the colab CLI, execute local scripts/notebooks, and manage remote files via the colab CLI.": "colab CLI üzerinden Google Colab CPU, GPU ve TPU çalışma zamanlarını yönetir, betik/not defteri çalıştırır ve uzak dosyaları yönetir.",
     "Unlock the power of agent swarms.": "Ajan sürülerinin (swarm) gücünü açığa çıkarın.",
-    "Unavailable": "Kullanılamıyor"
+    "Unavailable": "Kullanılamıyor",
+    "Chat Layout": "Sohbet Düzeni",
+    "Submit Prompt (Alternate to Enter)": "İstemi Gönder (Enter Alternatifi)",
+    "Enter always submits. This adds a second shortcut.": "Enter her zaman gönderir. Bu, ikinci bir kısayol ekler.",
+    "Jump to Previous Prompt": "Önceki İsteme Atla",
+    "Jump to Next Prompt": "Sonraki İsteme Atla",
+    "Pin / Unpin Conversation": "Sohbeti Sabitle / Sabitlemeyi Kaldır",
+    "For paid Pro plans, Argon quota is separate. Higher Argon quota (included as part of the larger Gemini quota bucket) is available on Ultra plans.": "Ücretli Pro planlarda Argon kotası ayrıdır. Daha yüksek Argon kotası (daha büyük Gemini kota havuzunun parçası olarak) Ultra planlarda sunulur.",
+    "Gemini 4 Argon Weekly Limit": "Gemini 4 Argon Haftalık Sınırı",
+    "Configure allowed and denied URLs for the browser subagent. It runs in the built-in browser, so no separate browser install is needed.": "Tarayıcı alt ajanı için izin verilen ve reddedilen URL'leri yapılandırın. Dahili tarayıcıda çalıştığından ayrı bir tarayıcı kurulumu gerekmez.",
+    "How to render rich interactive HTML widgets inline in the chat or as standalone artifacts. Use this skill when you want to show the user diagrams, data visualizations, interactive controls, educational walkthroughs, or any rich visual content beyond plain text and markdown.": "Sohbet içinde satır içi veya bağımsız yapıt olarak zengin etkileşimli HTML bileşenlerinin nasıl oluşturulacağını açıklar."
 };
+
+  function formatDurationTR(s) {
+    return String(s || "")
+      .replace(/\s*\.\s*$/, "")
+      .replace(/,/g, " ")
+      .replace(/\bdays?\b/gi, "gün")
+      .replace(/\bhours?\b/gi, "saat")
+      .replace(/\bminutes?\b/gi, "dakika")
+      .replace(/\bseconds?\b/gi, "saniye")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
 
   const PATTERNS = [
     { regex: /^See all \((\d+)\)$/, fn: (_, a) => `Tümünü gör (${a})` },
@@ -805,8 +827,8 @@
     { regex: /^(\d+)([smhd]) ago$/, fn: (_, a, b) => `${a}${b} önce` },
     { regex: /^Send feedback as (.+)$/, fn: (_, a) => `${a} olarak geri bildirim gönder` },
     { regex: /^Show (\d+) breakdowns?$/, fn: (_, a) => `${a} kırılımı göster` },
-    { regex: /^You have used some of your 5-hour limit, it will fully refresh in (.+)$/, fn: (_, a) => `5 saatlik limitinizin bir kısmını kullandınız, ${a} içinde tamamen yenilenecek.` },
-    { regex: /^You have used some of your weekly limit, it will fully refresh in (.+)$/, fn: (_, a) => `Haftalık limitinizin bir kısmını kullandınız, ${a} içinde tamamen yenilenecek.` },
+    { regex: /^You have used some of your 5-hour limit, it will fully refresh in (.+)$/, fn: (_, a) => `5 saatlik limitinizin bir kısmını kullandınız, ${formatDurationTR(a)} içinde tamamen yenilenecek.` },
+    { regex: /^You have used some of your weekly limit, it will fully refresh in (.+)$/, fn: (_, a) => `Haftalık limitinizin bir kısmını kullandınız, ${formatDurationTR(a)} içinde tamamen yenilenecek.` },
     { regex: /^(\d+)%\s+left$/, fn: (_, a) => `%${a} kaldı` },
     { regex: /^Resets in\s+(\d+)d\s+(\d+)h$/, fn: (_, a, b) => `${a}g ${b}s içinde sıfırlanır` },
     { regex: /^Resets in\s+(\d+)h\s+(\d+)m$/, fn: (_, a, b) => `${a}s ${b}d içinde sıfırlanır` },
@@ -852,7 +874,18 @@
     { regex: /^Updated\s+(.+)$/, fn: (_, a) => `Güncellendi: ${a}` },
     { regex: /^Good to see you,\s*(.+?)\.\s*What's next\?$/, fn: (_, a) => `Seni görmek güzel, ${a}. Sırada ne var?` },
     { regex: /^# OpenAI Codex Security — Antigravity Runtime & Tool Mapping[\s\S]*$/, fn: () => `# OpenAI Codex Security — Antigravity Çalışma Zamanı ve Araç Eşlemesi (codex-security)` },
-    { regex: /^# Colab CLI Guardrails - \*\*Protect quota and billing\*\*[\s\S]*$/, fn: () => `# Colab CLI Koruma Kuralları — Kota ve faturalandırmayı koruyun: Onay olmadan Colab VM ayırmayın.` }
+    { regex: /^# Colab CLI Guardrails - \*\*Protect quota and billing\*\*[\s\S]*$/, fn: () => `# Colab CLI Koruma Kuralları — Kota ve faturalandırmayı koruyun: Onay olmadan Colab VM ayırmayın.` },
+    { regex: /^Models within this group:\s*(.+)$/, fn: (_, a) => `Bu gruptaki modeller: ${a}` },
+    { regex: /^(.+?)\s+Weekly Limit$/, fn: (_, a) => `${a} Haftalık Sınırı` },
+    { regex: /^Search tool for modern web development best practices\.\s*MANDATORY:[\s\S]*$/, fn: () => `Modern web geliştirme (HTML/CSS ve istemci tarafı JS) en iyi uygulamaları için arama aracı.` },
+    { regex: /^How to render rich interactive HTML widgets inline in the chat or as standalone artifacts\.[\s\S]*$/, fn: () => `Sohbet içinde satır içi veya bağımsız yapıt olarak zengin etkileşimli HTML bileşenlerinin nasıl oluşturulacağını açıklar.` },
+    { regex: /^Interactive guide to design and create a scheduled background automation\.[\s\S]*$/, fn: () => `Zamanlanmış arka plan otomasyonu tasarlamak ve oluşturmak için etkileşimli kılavuz. /automation komutuyla da tetiklenir.` },
+    { regex: /^Operate Google Colab CPU, GPU, and TPU runtimes via[\s\S]*$/, fn: () => `colab CLI üzerinden Google Colab CPU, GPU ve TPU çalışma zamanlarını yönetir; betikleri uzaktan çalıştırır ve dosyaları eşitler.` },
+    { regex: /^Build, package, and debug MCP Apps for Antigravity:[\s\S]*$/, fn: () => `Antigravity için etkileşimli arayüze sahip MCP Uygulamaları geliştirir, paketler ve hata ayıklar.` },
+    { regex: /^Migrates the user's MCP servers, skills, slash commands, subagents, and instruction files[\s\S]*$/, fn: () => `Diğer kodlama ajanlarındaki (Claude Code, Codex, Cursor, Gemini CLI) MCP sunucularını, yetenekleri ve ayarları tek bir Antigravity eklentisine taşır.` },
+    { regex: /^How to manage and create plugins[\s\S]*$/, fn: () => `Tek birim olarak kurulup yönetilebilen eklentileri (yetenek, ajan, kural, MCP sunucusu ve kanca paketleri) oluşturma ve yönetme kılavuzu.` },
+    { regex: /^How to write and run a dynamic workflow script with the[\s\S]*$/, fn: () => `run_workflow aracıyla birden çok ajanı paralel veya aşamalı yöneten dinamik Python iş akışı betikleri yazma ve çalıştırma kılavuzu.` },
+    { regex: /^Discover UI plugin panels relevant to the current task[\s\S]*$/, fn: () => `Geçerli görevle ilgili arayüz eklenti panellerini keşfeder ve yan bölmede açmak için tek tıkla kısayol sunar.` }
   ];
 
   const IGNORE_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "PRE", "CODE", "TEXTAREA"]);

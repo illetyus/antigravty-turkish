@@ -269,8 +269,38 @@ def run_tests():
         assert required_snippet in locale_src, f"Missing translation entry: {required_snippet}"
     print("[PASS] Test 17: Unavailable badge and rule summary translations verified in tr-locale.js.")
 
+    # Test 18: Layout, shortcuts, quota duration units, browser rules, and truncated skill prefix translations
+    for required_snippet in [
+        '"Chat Layout": "Sohbet Düzeni"',
+        '"Submit Prompt (Alternate to Enter)": "İstemi Gönder (Enter Alternatifi)"',
+        '"Pin / Unpin Conversation": "Sohbeti Sabitle / Sabitlemeyi Kaldır"',
+        'function formatDurationTR(',
+        'Models within this group:',
+        'Weekly Limit',
+        'Configure allowed and denied URLs for the browser subagent.',
+        'Search tool for modern web development best practices.',
+    ]:
+        assert required_snippet in locale_src, f"Missing translation entry: {required_snippet}"
+    node_exe = r"D:\Android\Tools\Nodejs\node.exe"
+    if os.path.exists(node_exe):
+        subprocess.run([node_exe, "--check", locale_path], check=True)
+        runtime_test = (
+            "const fs=require('fs'),vm=require('vm'),assert=require('assert');"
+            "const src=fs.readFileSync(process.argv[1],'utf8')"
+            ".replace('function initObserver() {','window.__trResolve=resolveTranslation;function initObserver(){return;');"
+            "const ctx={Node:{ELEMENT_NODE:1,TEXT_NODE:3},window:{requestAnimationFrame:()=>{}},document:{readyState:'complete'},MutationObserver:class{}};"
+            "vm.runInNewContext(src,ctx);"
+            "const r=ctx.window.__trResolve;"
+            "assert.strictEqual(r('You have used some of your weekly limit, it will fully refresh in 6 days, 23 hours.'),'Haftalık limitinizin bir kısmını kullandınız, 6 gün 23 saat içinde tamamen yenilenecek.');"
+            "assert.strictEqual(r('Search tool for modern web development best practices. MANDATORY: Execute FIRST...').startsWith('Modern web geliştirme'),true);"
+            "assert.strictEqual(r('Models within this group: Gemini 4 Hydrogen'),'Bu gruptaki modeller: Gemini 4 Hydrogen');"
+            "assert.strictEqual(r('Gemini 4 Argon Weekly Limit'),'Gemini 4 Argon Haftalık Sınırı');"
+        )
+        subprocess.run([node_exe, "-e", runtime_test, locale_path], check=True)
+    print("[PASS] Test 18: Layout, shortcuts, quota duration formatting, browser rules, and prefix patterns verified.")
+
     print("\n==========================================")
-    print("ALL 17 TESTS PASSED SUCCESSFULLY (17/17).")
+    print("ALL 18 TESTS PASSED SUCCESSFULLY (18/18).")
     print("==========================================")
     return True
 

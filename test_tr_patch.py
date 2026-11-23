@@ -299,8 +299,35 @@ def run_tests():
         subprocess.run([node_exe, "-e", runtime_test, locale_path], check=True)
     print("[PASS] Test 18: Layout, shortcuts, quota duration formatting, browser rules, and prefix patterns verified.")
 
+    # Test 19: Remaining shortcuts, composer, code preview, orchestrator, token budget, and split '% left'
+    for required_snippet in [
+        '"Open Command Palette": "Komut Paletini Aç"',
+        '"Cancel Generation": "Üretimi İptal Et"',
+        '"Split Terminal": "Terminali Böl"',
+        '"Code Preview": "Kod Önizlemesi"',
+        '"Orchestrator Settings": "Orkestratör Ayarları"',
+        '"% left": "% kaldı"',
+        'Customization token budget exceeded.',
+    ]:
+        assert required_snippet in locale_src, f"Missing Test 19 translation entry: {required_snippet}"
+    if os.path.exists(node_exe):
+        runtime_test_19 = (
+            "const fs=require('fs'),vm=require('vm'),assert=require('assert');"
+            "const src=fs.readFileSync(process.argv[1],'utf8')"
+            ".replace('function initObserver() {','window.__trResolve=resolveTranslation;function initObserver(){return;');"
+            "const ctx={Node:{ELEMENT_NODE:1,TEXT_NODE:3},window:{requestAnimationFrame:()=>{}},document:{readyState:'complete'},MutationObserver:class{}};"
+            "vm.runInNewContext(src,ctx);"
+            "const r=ctx.window.__trResolve;"
+            "assert.strictEqual(r('% left'),'% kaldı');"
+            "assert.strictEqual(r('3.292 / 20.000 tokens'),'3.292 / 20.000 token');"
+            "assert.strictEqual(r('Open Command Palette'),'Komut Paletini Aç');"
+            "assert.strictEqual(r('Orchestrator Settings'),'Orkestratör Ayarları');"
+        )
+        subprocess.run([node_exe, "-e", runtime_test_19, locale_path], check=True)
+    print("[PASS] Test 19: Shortcuts, orchestrator settings, token budget, and split '% left' verified.")
+
     print("\n==========================================")
-    print("ALL 18 TESTS PASSED SUCCESSFULLY (18/18).")
+    print("ALL 19 TESTS PASSED SUCCESSFULLY (19/19).")
     print("==========================================")
     return True
 

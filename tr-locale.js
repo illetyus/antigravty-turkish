@@ -797,7 +797,33 @@
     "For paid Pro plans, Argon quota is separate. Higher Argon quota (included as part of the larger Gemini quota bucket) is available on Ultra plans.": "Ücretli Pro planlarda Argon kotası ayrıdır. Daha yüksek Argon kotası (daha büyük Gemini kota havuzunun parçası olarak) Ultra planlarda sunulur.",
     "Gemini 4 Argon Weekly Limit": "Gemini 4 Argon Haftalık Sınırı",
     "Configure allowed and denied URLs for the browser subagent. It runs in the built-in browser, so no separate browser install is needed.": "Tarayıcı alt ajanı için izin verilen ve reddedilen URL'leri yapılandırın. Dahili tarayıcıda çalıştığından ayrı bir tarayıcı kurulumu gerekmez.",
-    "How to render rich interactive HTML widgets inline in the chat or as standalone artifacts. Use this skill when you want to show the user diagrams, data visualizations, interactive controls, educational walkthroughs, or any rich visual content beyond plain text and markdown.": "Sohbet içinde satır içi veya bağımsız yapıt olarak zengin etkileşimli HTML bileşenlerinin nasıl oluşturulacağını açıklar."
+    "How to render rich interactive HTML widgets inline in the chat or as standalone artifacts. Use this skill when you want to show the user diagrams, data visualizations, interactive controls, educational walkthroughs, or any rich visual content beyond plain text and markdown.": "Sohbet içinde satır içi veya bağımsız yapıt olarak zengin etkileşimli HTML bileşenlerinin nasıl oluşturulacağını açıklar.",
+    "Open Command Palette": "Komut Paletini Aç",
+    "Open Keyboard Shortcuts": "Klavye Kısayollarını Aç",
+    "Cancel Generation": "Üretimi İptal Et",
+    "Toggle Project Selector": "Proje Seçiciyi Aç/Kapat",
+    "Toggle Environment Selector": "Ortam Seçiciyi Aç/Kapat",
+    "Find in Conversation": "Sohbette Bul",
+    "Comment on Selection": "Seçime Yorum Ekle",
+    "Side Question Selection": "Seçim İçin Yan Soru Sor",
+    "Split Conversation Horizontally": "Sohbeti Yatay Böl",
+    "Split Conversation Vertically": "Sohbeti Dikey Böl",
+    "Split Terminal": "Terminali Böl",
+    "New Terminal Tab": "Yeni Terminal Sekmesi",
+    "Terminal: Add to Chat": "Terminal: Sohbete Ekle",
+    "Terminal: Select All": "Terminal: Tümünü Seç",
+    "Choose which key sends a message in the chat composer.": "Sohbet düzenleyicide mesajı hangi tuşun göndereceğini seçin.",
+    "Code Preview": "Kod Önizlemesi",
+    "Orchestrator Settings": "Orkestratör Ayarları",
+    "Choose the models Orchestrator uses. A larger, smarter orchestrator model with a faster, cheaper executor gives high quality for fewer tokens.": "Orkestratörün kullandığı modelleri seçin. Daha büyük, akıllı bir orkestratör modeli ile daha hızlı, ekonomik bir yürütücü birlikte daha az token ile yüksek kalite sunar.",
+    "Orchestrator Model": "Orkestratör Modeli",
+    "Plans the work, makes design decisions, and reviews the result. Pick a top-tier model.": "İşi planlar, tasarım kararları alır ve sonucu inceler. Üst düzey bir model seçin.",
+    "You can also pick one per conversation from the Orchestrator row in the model menu.": "Ayrıca model menüsündeki Orkestratör satırından sohbet başına da seçim yapabilirsiniz.",
+    "Plans the work, makes design decisions, and reviews the result. Pick a top-tier model. You can also pick one per conversation from the Orchestrator row in the model menu.": "İşi planlar, tasarım kararları alır ve sonucu inceler. Üst düzey bir model seçin. Ayrıca model menüsündeki Orkestratör satırından sohbet başına da seçim yapabilirsiniz.",
+    "Executor Model": "Yürütücü Model",
+    "Carries out the plan: searches, edits, builds, and tests. Pick a faster, cheaper model.": "Planı uygular: arar, düzenler, derler ve test eder. Daha hızlı ve ekonomik bir model seçin.",
+    "Customization token budget exceeded. Large customizations are excluded from context.": "Özelleştirme token bütçesi aşıldı. Büyük özelleştirmeler bağlamdan hariç tutuluyor.",
+    "% left": "% kaldı"
 };
 
   function formatDurationTR(s) {
@@ -885,7 +911,11 @@
     { regex: /^Migrates the user's MCP servers, skills, slash commands, subagents, and instruction files[\s\S]*$/, fn: () => `Diğer kodlama ajanlarındaki (Claude Code, Codex, Cursor, Gemini CLI) MCP sunucularını, yetenekleri ve ayarları tek bir Antigravity eklentisine taşır.` },
     { regex: /^How to manage and create plugins[\s\S]*$/, fn: () => `Tek birim olarak kurulup yönetilebilen eklentileri (yetenek, ajan, kural, MCP sunucusu ve kanca paketleri) oluşturma ve yönetme kılavuzu.` },
     { regex: /^How to write and run a dynamic workflow script with the[\s\S]*$/, fn: () => `run_workflow aracıyla birden çok ajanı paralel veya aşamalı yöneten dinamik Python iş akışı betikleri yazma ve çalıştırma kılavuzu.` },
-    { regex: /^Discover UI plugin panels relevant to the current task[\s\S]*$/, fn: () => `Geçerli görevle ilgili arayüz eklenti panellerini keşfeder ve yan bölmede açmak için tek tıkla kısayol sunar.` }
+    { regex: /^Discover UI plugin panels relevant to the current task[\s\S]*$/, fn: () => `Geçerli görevle ilgili arayüz eklenti panellerini keşfeder ve yan bölmede açmak için tek tıkla kısayol sunar.` },
+    { regex: /^%\s*left$/i, fn: () => `% kaldı` },
+    { regex: /^([\d.,]+)\s*\/\s*([\d.,]+)\s+tokens(.*)$/, fn: (_, a, b, c) => `${a} / ${b} token${c}` },
+    { regex: /^\/?\s*([\d.,]+)\s+tokens(.*)$/, fn: (full, a, b) => (full.trim().startsWith("/") ? `/ ${a} token${b}` : `${a} token${b}`) },
+    { regex: /^tokens\b(.*)$/, fn: (_, a) => `token${a}` }
   ];
 
   const IGNORE_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "PRE", "CODE", "TEXTAREA"]);
